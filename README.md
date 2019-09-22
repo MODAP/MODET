@@ -1,2 +1,3 @@
+![Image](../LOGO.png?raw=true)
 # MODET
-Team MODAP Detection Module
+
