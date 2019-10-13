@@ -32,6 +32,26 @@ class Corpus(object):
         self.groundTruths = [] 
         self.meta = []
 
+    def load_dirs(self, imagedirs_dir:str, groundtruths_dir:str, ext:str=".txt") -> None:
+        """load_dirs
+        Gets images in folders in images_dir and matches them with ground truths, then loads them
+        
+        :param imagedirs_dir: directory where directories of frames are located
+        :type imagedirs_dir: str
+        :param groundtruths_dir: directory where files of ground truths are located
+        :type groundtruths_dir: str
+        :param ext: groundtruth file extension
+        :type ext: str
+        :rtype: None
+        """
+        
+        imgDirs = natsort.natsorted(os.listdir(imagedirs_dir)) 
+        for i, imgDir in enumerate(imgDirs):
+            print("Loading frame set", i, "of", len(imgDirs))
+            fullImgDir = os.path.join(imagedirs_dir, imgDir)
+            fullTruthDir = os.path.join(groundtruths_dir, imgDir+ext)
+            self.load_dir(fullImgDir, fullTruthDir)
+
     def load_dir(self, images_dir:str, groundtruth_dir:str) -> None:
         """load_dir
         Loads directory of images to a ground truth document 

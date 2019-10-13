@@ -18,7 +18,8 @@ import modet
 from modet.love import bundle
 
 c = bundle.Corpus()
-c.load_dir("./corpusraw.donotsync/Drone1/1.1.1", "./corpusraw.donotsync/Labels/SingleActionLabels/3840x2160/1.1.1.txt")
+# c.load_dir("./corpusraw.donotsync/Drone1/1.1.1", "./corpusraw.donotsync/Labels/SingleActionLabels/3840x2160/1.1.1.txt")
+c.load_dirs("./corpusraw.donotsync/Drone1/", "./corpusraw.donotsync/Labels/SingleActionLabels/3840x2160/")
 
 # im = Image.open("./corpusraw.donotsync/Drone1/1.1.1/0.jpg")
 # imGen = im.getdata()
