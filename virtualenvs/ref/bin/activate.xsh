@@ -28,7 +28,7 @@ def _deactivate(args):
 _deactivate(["nondestructive"])
 aliases["deactivate"] = _deactivate
 
-$VIRTUAL_ENV = r"/Users/houliu/Nextcloud/Documents/Projects/MODET/virtualenvs/refrence"
+$VIRTUAL_ENV = r"/Users/houliu/Nextcloud/Documents/Projects/MODET/virtualenvs/ref"
 
 $_OLD_VIRTUAL_PATH = $PATH
 $PATH = $PATH[:]

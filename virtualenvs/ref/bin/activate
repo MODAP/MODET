@@ -46,7 +46,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/houliu/Nextcloud/Documents/Projects/MODET/virtualenvs/refrence"
+VIRTUAL_ENV="/Users/houliu/Nextcloud/Documents/Projects/MODET/virtualenvs/ref"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
