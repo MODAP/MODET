@@ -36,24 +36,29 @@ class Corpus(object):
         """load_dir
         Loads directory of images to a ground truth document 
         
-        :param images_dir:
+        :param images_dir: directory where frames are located
         :type images_dir: str
-        :param groundtruth_dir:
+        :param groundtruth_dir: file containing ground truths
         :type groundtruth_dir: str
         :rtype: None
         """
 
+        # Opens and parses the groundtruth file
         with open(groundtruth_dir, "r") as df:
             for line in utils.progressbar(df.readlines(), "Truths Loading: "):
                 truthArray_raw = line.strip().split(" ")
                 truthArray = []
+                # Loads ground truths and casts the appropriate items to int
                 for item in truthArray_raw:
                     try:
                         item_cast = int(item)
                     except ValueError:
                         item_cast = item.strip('"')
+                    # Appends the cast value to truths
                     truthArray.append(item_cast) 
+                # Gets the index of the frame
                 frame = truthArray[5]
+                # Appends the found truths to the class-wide array containing the ground truths
                 while True:
                     try:
                         self.groundTruths[frame].append(truthArray[1:5])
@@ -70,11 +75,16 @@ class Corpus(object):
                         self.meta.append([])
                         self.meta[frame].append(truthArray[6:])
                         continue
+        # Sorts the image directory by frame
         imgDirs = natsort.natsorted(os.listdir(images_dir)) 
+        # Opens each frame file
         for url in utils.progressbar(imgDirs, "Images Loading: "):
+            # Opens the file as image
             im = Image.open(os.path.join(images_dir, url))
             imageArray = []
             for pixel in im.getdata():
+                # Appends each pixel [r, g, b] to imageArray
                imageArray.append(list(pixel)) 
+            # Adds the image to the class-wide array
             self.images.append(imageArray)
       
