@@ -15,8 +15,12 @@
 # SOFTWARE.
 
 
+import os
 import types
+import natsort
 from PIL import Image
+
+from .. import utils 
 
 class Corpus(object):
     """
@@ -24,8 +28,8 @@ class Corpus(object):
     """
     
     def __init__(self):
-        self.inputs = []
-        self.groundTruths = []
+        self.images = []
+        self.groundTruths = [] 
         self.meta = []
 
     def load_dir(self, images_dir:str, groundtruth_dir:str) -> None:
@@ -40,7 +44,7 @@ class Corpus(object):
         """
 
         with open(groundtruth_dir, "r") as df:
-            for line in df:
+            for line in utils.progressbar(df.readlines(), "Truths Loading: "):
                 truthArray_raw = line.strip().split(" ")
                 truthArray = []
                 for item in truthArray_raw:
@@ -48,7 +52,29 @@ class Corpus(object):
                         item_cast = int(item)
                     except ValueError:
                         item_cast = item.strip('"')
-                    truthArray.append(item_cast)   
-                self.groundTruths.append(truthArray[1:5])
-                self.meta.append(truthArray[6:])
-        breakpoint() 
+                    truthArray.append(item_cast) 
+                frame = truthArray[5]
+                while True:
+                    try:
+                        self.groundTruths[frame].append(truthArray[1:5])
+                        break
+                    except IndexError:
+                        self.groundTruths.append([])
+                        self.groundTruths[frame].append(truthArray[1:5])
+                        continue
+                while True:
+                    try:
+                        self.meta[frame].append(truthArray[6:])
+                        break
+                    except IndexError:
+                        self.meta.append([])
+                        self.meta[frame].append(truthArray[6:])
+                        continue
+        imgDirs = natsort.natsorted(os.listdir(images_dir)) 
+        for url in utils.progressbar(imgDirs, "Images Loading: "):
+            im = Image.open(os.path.join(images_dir, url))
+            imageArray = []
+            for pixel in im.getdata():
+               imageArray.append(list(pixel)) 
+            self.images.append(imageArray)
+      
