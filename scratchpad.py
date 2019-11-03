@@ -15,16 +15,22 @@
 # SOFTWARE.
 
 import modet
+import pickle
 from modet.love import bundle
 
-c = bundle.Corpus()
+
+c = bundle.Corpus.open("/Users/houliu/Nextcloud/Documents/Projects/MODET/love_corpora/1-1-1.mocorp")
+cm = bundle.CorpusManager(c)
+breakpoint()
+# cm.compile()
+
+# c = bundle.Corpus(name="1-1-1", savedir="love_corpora")
 # c.load_dir("./corpusraw.donotsync/Drone1/1.1.1", "./corpusraw.donotsync/Labels/SingleActionLabels/3840x2160/1.1.1.txt")
-c.load_dirs("./corpusraw.donotsync/Drone1/", "./corpusraw.donotsync/Labels/SingleActionLabels/3840x2160/")
+# c.load_dirs("./corpusraw.donotsync/Drone1/", "./corpusraw.donotsync/Labels/SingleActionLabels/3840x2160/", truth_downsampling_correction=3)
 
 # im = Image.open("./corpusraw.donotsync/Drone1/1.1.1/0.jpg")
 # imGen = im.getdata()
 # 
 # for pixel in imGen:
     # print(pixel)
-
 
