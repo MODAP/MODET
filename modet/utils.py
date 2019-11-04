@@ -15,6 +15,7 @@
 # SOFTWARE.
 
 import sys
+from keras.utils import Sequence
 
 def progressbar(it, prefix="", size=60, file=sys.stdout):
     count = len(it)
@@ -29,4 +30,5 @@ def progressbar(it, prefix="", size=60, file=sys.stdout):
     file.write("\n")
     file.flush()
 
+        
 

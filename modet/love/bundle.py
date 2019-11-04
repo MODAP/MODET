@@ -24,6 +24,7 @@ import pickle
 import natsort
 import numpy as np
 from PIL import Image
+from keras.utils import Sequence
 
 from .. import utils 
 
@@ -86,28 +87,11 @@ class Corpus(object):
             with open(os.path.join(self.__input_files_dir, i), "rb") as df:
                 img = pickle.load(df)
                 yield img
-    
-#     def load_dirs(self, imagedirs_dir:str, groundtruths_dir:str, ext:str=".txt", truth_downsampling_correction:float=1) -> None:
-        # """load_dirs
-        # Gets images in folders in images_dir and matches them with ground truths, then loads them
-        
-        # :param imagedirs_dir: directory where directories of frames are located
-        # :type imagedirs_dir: str
-        # :param groundtruths_dir: directory where files of ground truths are located
-        # :type groundtruths_dir: str
-        # :param ext: groundtruth file extension
-        # :type ext: str
-        # :param truth_downsampling_correction: corrects the downsampling (if any) with a factor of... (default is 1 — no correction.)
-        # :type truth_downsampling_correction: float
-        # :rtype: None
-        # """
-        
-        # imgDirs = natsort.natsorted(os.listdir(imagedirs_dir)) 
-        # for i, imgDir in enumerate(imgDirs):
-            # print("Loading frame set", i, "of", len(imgDirs))
-            # fullImgDir = os.path.join(imagedirs_dir, imgDir)
-            # fullTruthDir = os.path.join(groundtruths_dir, imgDir+ext)
-            # self.load_dir(fullImgDir, fullTruthDir, truth_downsampling_correction)
+   
+    def images_by_index(self, indx):
+        with open(os.path.join(self.__input_files_dir, str(indx)), "rb") as df:
+                img = pickle.load(df)
+        return img
 
     def load_dir(self, images_dir:str, groundtruth_dir:str, truth_downsampling_correction:float=1) -> None:
         """load_dir
@@ -176,7 +160,7 @@ class Corpus(object):
                 pickle.dump(imageArray, df)
             imgIndex += 1
 
-class CorpusManager(object):
+class CorpusManager(Sequence):
     """
     """
 
@@ -193,6 +177,13 @@ class CorpusManager(object):
             else:
                 self.anchor_factor = anchor_factor
                 self.__is_compiled = False
+
+    def __len__(self):
+        return len(self.outputs)
+
+    def __getitem__(self, idx):
+        unshaped = self.corpus.images_by_index(idx)
+        return np.array([np.array(unshaped).reshape(1280, 720, 3)]), np.array([self.outputs[idx]])
 
     @property
     def __anchors(self):
@@ -233,24 +224,26 @@ class CorpusManager(object):
     def outputs(self):
         if not self.__is_compiled:
             raise ValueError("Please call CorpusManager.compile() to compile this corpus.")
-        return np.array(self.__compiled_output_data)
+        else:
+            return self.__compiled_output_data
 
     @property
     def outputs_gen(self):
         if not self.__is_compiled:
             raise ValueError("Please call CorpusManager.compile() to compile this corpus.")
-        for i in self.__compiled_output_data:
-            yield np.array(i)
+        for frame in self.__compiled_output_data:
+            yield frame
 
     def compile(self):
         assert not self.__is_compiled, "This corpus has already been compiled!"
         anchors = self.__anchors
         self.__compiled_output_data = []
         for frame in utils.progressbar(self.corpus.groundTruths, "Parsing truths: "):
-            anchor_template = [[]]*len(anchors)
+            anchor_template = [[0,0,0,0,0]]*len(anchors)
             anchor_indxs = [anchors.index(self.__assign_anchor(i[0], i[1], i[2], i[3])) for i in frame]
             for box, index in zip(frame, anchor_indxs):
-                anchor_template[index] = [box]
+                anchor_template[index] = box+[1]
+            anchor_template = [i for sublist in anchor_template for i in sublist]
             self.__compiled_output_data.append(anchor_template)
         self.__is_compiled = True
         self.__inject_corpus()

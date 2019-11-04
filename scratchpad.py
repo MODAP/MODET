@@ -17,12 +17,16 @@
 import modet
 import pickle
 from modet.love import bundle
+from modet.brain import squeezedet
 
 
 c = bundle.Corpus.open("/Users/houliu/Nextcloud/Documents/Projects/MODET/love_corpora/1-1-1.mocorp")
 cm = bundle.CorpusManager(c)
-breakpoint()
-# cm.compile()
+
+
+net = squeezedet.SqueezeDet()
+
+net.fit(cm)
 
 # c = bundle.Corpus(name="1-1-1", savedir="love_corpora")
 # c.load_dir("./corpusraw.donotsync/Drone1/1.1.1", "./corpusraw.donotsync/Labels/SingleActionLabels/3840x2160/1.1.1.txt")
