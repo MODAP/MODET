@@ -164,8 +164,9 @@ class CorpusManager(Sequence):
     """
     """
 
-    def __init__(self, corpus:Corpus, anchor_factor=40):
+    def __init__(self, corpus:Corpus, anchor_factor=40, batch_size=8):
         self.corpus = corpus
+        self.batch_size = batch_size
         with open(os.path.join(corpus.savedir, "corpus.conf"), "r") as df:
             db = json.loads(df.read())
             if db.get("ismanaged"):
@@ -179,11 +180,18 @@ class CorpusManager(Sequence):
                 self.__is_compiled = False
 
     def __len__(self):
-        return len(self.outputs)
+        return int(float(len(self.outputs))/float(self.batch_size))
 
     def __getitem__(self, idx):
-        unshaped = self.corpus.images_by_index(idx)
-        return np.array([np.array(unshaped).reshape(1280, 720, 3)]), np.array([self.outputs[idx]])
+        batch_indexes = list(range(idx*self.batch_size, idx*self.batch_size+self.batch_size))
+        input_batch = []
+        for i in batch_indexes:
+            unshaped = self.corpus.images_by_index(i)
+            input_batch.append(np.array(unshaped).reshape(1280, 720, 3))
+        output_batch = []
+        for i in batch_indexes:
+            output_batch.append(self.outputs[i])
+        return np.array(input_batch), np.array(output_batch)
 
     @property
     def __anchors(self):

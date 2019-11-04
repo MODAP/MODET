@@ -17,6 +17,7 @@
 import tensorflow as tf
 from keras.models import Model
 from keras.layers import Dense, Conv2D, MaxPool2D, GlobalAveragePooling2D, concatenate, Input
+from keras.initializers import TruncatedNormal
 
 class SqueezeDet(object):
     """
@@ -30,10 +31,10 @@ class SqueezeDet(object):
     def __build(self):
 
         # the input
-        in_layer = Input(batch_shape=(1, 1280, 720, 3), name="input")
+        in_layer = Input(batch_shape=(None, 1280, 720, 3), name="input")
 
         # Firstly, extra the features
-        conv0 = Conv2D(filters=64, kernel_size=(3, 3), strides=(2, 2), padding="SAME", activation="relu")(in_layer) 
+        conv0 = Conv2D(filters=64, kernel_size=(3, 3), strides=(2, 2), padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(in_layer) 
         pool0 = MaxPool2D(pool_size=(3,3), padding="SAME", strides=(2, 2))(conv0) 
 
         # ok, 黑喂狗.... Begin squeezin' 
@@ -59,7 +60,7 @@ class SqueezeDet(object):
         f9 = self.__fire(f8, 64, 128, 128)
 
         # Final shaping convolution
-        conv31 = Conv2D(filters=627*(4+1), kernel_size=(3, 3), padding="SAME", activation="relu")(f9)
+        conv31 = Conv2D(filters=627*(4+1), kernel_size=(3, 3), padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(f9)
 
         yHat = GlobalAveragePooling2D()(conv31)
         # And, of course, the model
@@ -77,9 +78,9 @@ class SqueezeDet(object):
         :param expand_filters_small: the number of filters for the 1x1 expand layer
         :param expand_filter_large: the number of filters for the 3x3
         """
-        squeeze = Conv2D(filters=squeeze_filters, kernel_size=(1, 1), use_bias=True, activation="relu")(in_layer)
-        smallExpand = Conv2D(filters=expand_filters_small, kernel_size=(1, 1), use_bias=True, activation="relu")(squeeze)
-        largeExpand = Conv2D(filters=expand_filters_large, kernel_size=(3, 3), use_bias=True, padding="SAME", activation="relu")(squeeze)
+        squeeze = Conv2D(filters=squeeze_filters, kernel_size=(1, 1), use_bias=True, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(in_layer)
+        smallExpand = Conv2D(filters=expand_filters_small, kernel_size=(1, 1), use_bias=True, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(squeeze)
+        largeExpand = Conv2D(filters=expand_filters_large, kernel_size=(3, 3), use_bias=True, padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(squeeze)
         return concatenate([smallExpand, largeExpand], axis=3)
 
     def fit(self, manager, epochs=10):

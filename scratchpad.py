@@ -21,8 +21,7 @@ from modet.brain import squeezedet
 
 
 c = bundle.Corpus.open("/Users/houliu/Nextcloud/Documents/Projects/MODET/love_corpora/1-1-1.mocorp")
-cm = bundle.CorpusManager(c)
-
+cm = bundle.CorpusManager(c, batch_size=1)
 
 net = squeezedet.SqueezeDet()
 
