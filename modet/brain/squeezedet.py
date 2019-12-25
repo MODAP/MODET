@@ -16,7 +16,7 @@
 
 import tensorflow as tf
 from keras.models import Model
-from keras.layers import Dense, Conv2D, MaxPool2D, GlobalAveragePooling2D, concatenate, Input
+from keras.layers import Dense, Conv2D, MaxPool2D, GlobalAveragePooling2D, concatenate, Input, Reshape
 from keras.initializers import TruncatedNormal
 
 class SqueezeDet(object):
@@ -24,7 +24,7 @@ class SqueezeDet(object):
     The Biggy
     """
 
-    def __init__(self, optimizer="Adam", loss="mse"):
+    def __init__(self, optimizer="Adam", loss="mae"):
         self.model = self.__build()
         self.model.compile(optimizer, loss)
 
@@ -59,8 +59,17 @@ class SqueezeDet(object):
         f8 = self.__fire(f7, 64, 128, 128)
         f9 = self.__fire(f8, 64, 128, 128)
 
+        # Max Pool Still
+        pool3 = MaxPool2D(pool_size=(3, 3), padding="SAME", strides=(2, 2))(f9)
+
+        # Más squeezy
+        f10 = self.__fire(pool3, 128, 192, 128)
+        f11 = self.__fire(f10, 128, 192, 128)
+        f12 = self.__fire(f11, 128, 192, 128)
+
         # Final shaping convolution
-        conv31 = Conv2D(filters=627*(4+1), kernel_size=(3, 3), padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(f9)
+        conv31 = Conv2D(filters=627*(4+1), kernel_size=(3, 3), strides=(1, 1), padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(f12)
+        # Shapes it to self.config.ANCHOR_PER_GRID * (self.config.CLASSES + 1 + 4)
 
         yHat = GlobalAveragePooling2D()(conv31)
         # And, of course, the model
@@ -84,4 +93,4 @@ class SqueezeDet(object):
         return concatenate([smallExpand, largeExpand], axis=3)
 
     def fit(self, manager, epochs=10):
-        self.model.fit_generator(manager, epochs=epochs) 
+        self.model.fit_generator(manager, epochs=epochs, shuffle=True) 

@@ -14,16 +14,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import modet
-import pickle
+from keras.optimizers import Adam
 from modet.love import bundle
 from modet.brain import squeezedet
 
 
-c = bundle.Corpus.open("/Users/houliu/Nextcloud/Documents/Projects/MODET/love_corpora/1-1-1.mocorp")
-cm = bundle.CorpusManager(c, batch_size=1)
+c = bundle.Corpus.open("/Users/houliu/Documents/Projects/MODET/love_corpora/1-1-1.mocorp")
+cm = bundle.CorpusManager(c, batch_size=8)
 
-net = squeezedet.SqueezeDet()
+net = squeezedet.SqueezeDet(optimizer=Adam(lr=2e-4))
 
 net.fit(cm)
 

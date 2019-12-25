@@ -164,7 +164,7 @@ class CorpusManager(Sequence):
     """
     """
 
-    def __init__(self, corpus:Corpus, anchor_factor=40, batch_size=8):
+    def __init__(self, corpus: Corpus, anchor_factor=40, batch_size=8):
         self.corpus = corpus
         self.batch_size = batch_size
         with open(os.path.join(corpus.savedir, "corpus.conf"), "r") as df:
@@ -247,7 +247,7 @@ class CorpusManager(Sequence):
         anchors = self.__anchors
         self.__compiled_output_data = []
         for frame in utils.progressbar(self.corpus.groundTruths, "Parsing truths: "):
-            anchor_template = [[0,0,0,0,0]]*len(anchors)
+            anchor_template = [[0, 0, 0, 0, 0]]*len(anchors)
             anchor_indxs = [anchors.index(self.__assign_anchor(i[0], i[1], i[2], i[3])) for i in frame]
             for box, index in zip(frame, anchor_indxs):
                 anchor_template[index] = box+[1]
