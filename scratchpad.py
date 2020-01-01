@@ -19,8 +19,9 @@ from modet.love import bundle
 from modet.brain import squeezedet
 
 
-c = bundle.Corpus.open("/Users/houliu/Documents/Projects/MODET/love_corpora/1-1-1.mocorp")
-cm = bundle.CorpusManager(c, batch_size=8)
+c = bundle.Corpus.open("love_corpora/1-1-1.mocorp")
+cm = bundle.CorpusManager(c, batch_size=2)
+# cm.compile()
 
 net = squeezedet.SqueezeDet(optimizer=Adam(lr=2e-4))
 

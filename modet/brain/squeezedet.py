@@ -15,8 +15,9 @@
 # SOFTWARE.
 
 import tensorflow as tf
+import keras.backend as K
 from keras.models import Model
-from keras.layers import Dense, Conv2D, MaxPool2D, GlobalAveragePooling2D, concatenate, Input, Reshape
+from keras.layers import Dense, Conv2D, Conv1D, MaxPool2D, GlobalAveragePooling2D, concatenate, Input, Reshape, Lambda, concatenate
 from keras.initializers import TruncatedNormal
 
 class SqueezeDet(object):
@@ -24,9 +25,12 @@ class SqueezeDet(object):
     The Biggy
     """
 
-    def __init__(self, optimizer="Adam", loss="mae"):
+    def __init__(self, optimizer="Adam"):
         self.model = self.__build()
-        self.model.compile(optimizer, loss)
+        self.model.compile(optimizer, self.__SDetLoss)
+
+    def __SDetLoss(self,yTrue,yPred):
+        return 1e-7*(K.sum(K.square((yPred-yTrue))))
 
     def __build(self):
 
@@ -67,13 +71,28 @@ class SqueezeDet(object):
         f11 = self.__fire(f10, 128, 192, 128)
         f12 = self.__fire(f11, 128, 192, 128)
 
-        # Final shaping convolution
-        conv31 = Conv2D(filters=627*(4+1), kernel_size=(3, 3), strides=(1, 1), padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(f12)
+        # conv31 = Conv2D(filters=627*(4+1), kernel_size=(3, 3), strides=(1, 1), padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(f12)
         # Shapes it to self.config.ANCHOR_PER_GRID * (self.config.CLASSES + 1 + 4)
 
-        yHat = GlobalAveragePooling2D()(conv31)
+        output_flat = GlobalAveragePooling2D()(f12)
+        output_expanded = Lambda(lambda x: K.expand_dims(x, axis=-1))(output_flat)
+
+        # Final shaping convolution
+        conv31 = Conv1D(filters=627, kernel_size=5, strides=1, padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(output_expanded)
+        
+        # Output Collection
+        outputs = []
+        for i in range(627):
+            anchor = Lambda(lambda x : x[:,:,i])(conv31)
+            # net_bounds = Dense(32, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(anchor)
+            # net_bounds = Dense(16, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(net_bounds)
+            # net_bounds = Dense(4, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(net_bounds)
+            net_bounds = Dense(4, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(anchor)
+            net_confidence = Dense(1, activation="sigmoid", kernel_initializer=TruncatedNormal(stddev=1e-11))(net_bounds)
+            outputs.append(concatenate([net_bounds, net_confidence]))
+
         # And, of course, the model
-        model = Model(inputs=in_layer, outputs=yHat)
+        model = Model(inputs=in_layer, outputs=outputs)
 
         return model
 

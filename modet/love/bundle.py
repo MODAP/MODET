@@ -191,7 +191,11 @@ class CorpusManager(Sequence):
         output_batch = []
         for i in batch_indexes:
             output_batch.append(self.outputs[i])
-        return np.array(input_batch), np.array(output_batch)
+        output_batch_reshaped = [[] for _ in range(627)] 
+        for image in output_batch:
+            for anchor_number, anchor in enumerate(image):
+                output_batch_reshaped[anchor_number].append(anchor)
+        return np.array(input_batch), output_batch_reshaped
 
     @property
     def __anchors(self):
@@ -251,7 +255,7 @@ class CorpusManager(Sequence):
             anchor_indxs = [anchors.index(self.__assign_anchor(i[0], i[1], i[2], i[3])) for i in frame]
             for box, index in zip(frame, anchor_indxs):
                 anchor_template[index] = box+[1]
-            anchor_template = [i for sublist in anchor_template for i in sublist]
+            # anchor_template = [i for sublist in anchor_template for i in sublist]
             self.__compiled_output_data.append(anchor_template)
         self.__is_compiled = True
         self.__inject_corpus()
