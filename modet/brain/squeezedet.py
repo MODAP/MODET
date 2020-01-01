@@ -14,25 +14,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import keras
 import tensorflow as tf
 import keras.backend as K
 from keras.models import Model
 from keras.layers import Dense, Conv2D, Conv1D, MaxPool2D, GlobalAveragePooling2D, concatenate, Input, Reshape, Lambda, concatenate
 from keras.initializers import TruncatedNormal
+from tensorflow.python.client import device_lib
+from keras.utils import multi_gpu_model
 
 class SqueezeDet(object):
     """
     The Biggy
     """
 
-    def __init__(self, optimizer="Adam"):
-        self.model = self.__build()
+    def __init__(self, optimizer="Adam", multi=False, save="SqueezeDet.{epoch:02d}.h5"):
+        self.save = save
+        self.model = self.__build(multi=multi)
         self.model.compile(optimizer, self.__SDetLoss)
 
     def __SDetLoss(self,yTrue,yPred):
         return 1e-7*(K.sum(K.square((yPred-yTrue))))
 
-    def __build(self):
+    def __build(self, multi=False):
 
         # the input
         in_layer = Input(batch_shape=(None, 1280, 720, 3), name="input")
@@ -94,6 +98,12 @@ class SqueezeDet(object):
         # And, of course, the model
         model = Model(inputs=in_layer, outputs=outputs)
 
+        if multi:
+            local_device_protos = device_lib.list_local_devices()
+            gpus = [x.name for x in local_device_protos if x.device_type == 'GPU']
+            num_gpu = len(gpus)
+            model = multi_gpu_model(model, gpus=num_gpu)
+
         return model
 
     def __fire(self, in_layer, squeeze_filters, expand_filters_small, expand_filters_large):
@@ -112,4 +122,4 @@ class SqueezeDet(object):
         return concatenate([smallExpand, largeExpand], axis=3)
 
     def fit(self, manager, epochs=10):
-        self.model.fit_generator(manager, epochs=epochs, shuffle=True) 
+        self.model.fit_generator(manager, epochs=epochs, shuffle=True, callbacks=[keras.callbacks.ModelCheckpoint(self.save, monitor='val_loss')]) 
