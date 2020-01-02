@@ -164,7 +164,7 @@ class CorpusManager(Sequence):
     """
     """
 
-    def __init__(self, corpus: Corpus, anchor_factor=40, batch_size=8):
+    def __init__(self, corpus: Corpus, anchor_factor=240, batch_size=8):
         self.corpus = corpus
         self.batch_size = batch_size
         with open(os.path.join(corpus.savedir, "corpus.conf"), "r") as df:
@@ -191,7 +191,7 @@ class CorpusManager(Sequence):
         output_batch = []
         for i in batch_indexes:
             output_batch.append(self.outputs[i])
-        output_batch_reshaped = [[] for _ in range(627)] 
+        output_batch_reshaped = [[] for _ in range(len(self.outputs[0]))] 
         for image in output_batch:
             for anchor_number, anchor in enumerate(image):
                 output_batch_reshaped[anchor_number].append(anchor)

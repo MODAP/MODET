@@ -86,7 +86,8 @@ class SqueezeDet(object):
         
         # Output Collection
         outputs = []
-        for i in range(627):
+        # for i in range(627):
+        for i in range(24):
             anchor = Lambda(lambda x : x[:,:,i])(conv31)
             # net_bounds = Dense(32, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(anchor)
             # net_bounds = Dense(16, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(net_bounds)
