@@ -18,7 +18,7 @@ import keras
 import tensorflow as tf
 import keras.backend as K
 from keras.models import Model
-from keras.layers import Dense, Conv2D, Conv1D, MaxPool2D, GlobalAveragePooling2D, concatenate, Input, Reshape, Lambda, concatenate
+from keras.layers import Dense, Conv2D, Conv1D, MaxPool2D, GlobalAveragePooling2D, concatenate, Input, Reshape, Lambda, concatenate, BatchNormalization
 from keras.initializers import TruncatedNormal
 from tensorflow.python.client import device_lib
 from keras.utils import multi_gpu_model
@@ -34,15 +34,16 @@ class SqueezeDet(object):
         self.model.compile(optimizer, self.__SDetLoss)
 
     def __SDetLoss(self,yTrue,yPred):
-        return 1e-7*(K.sum(K.square((yPred-yTrue))))
+        return (K.sum(K.square((yPred-yTrue))))
 
     def __build(self, multi=False):
 
         # the input
         in_layer = Input(batch_shape=(None, 1280, 720, 3), name="input")
+        input_normalized = BatchNormalization()(in_layer)
 
         # Firstly, extra the features
-        conv0 = Conv2D(filters=64, kernel_size=(3, 3), strides=(2, 2), padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(in_layer) 
+        conv0 = Conv2D(filters=64, kernel_size=(3, 3), strides=(2, 2), padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-128))(input_normalized) 
         pool0 = MaxPool2D(pool_size=(3,3), padding="SAME", strides=(2, 2))(conv0) 
 
         # ok, 黑喂狗.... Begin squeezin' 
@@ -75,25 +76,25 @@ class SqueezeDet(object):
         f11 = self.__fire(f10, 128, 192, 128)
         f12 = self.__fire(f11, 128, 192, 128)
 
-        # conv31 = Conv2D(filters=627*(4+1), kernel_size=(3, 3), strides=(1, 1), padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(f12)
+        # conv31 = Conv2D(filters=627*(4+1), kernel_size=(3, 3), strides=(1, 1), padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-128))(f12)
         # Shapes it to self.config.ANCHOR_PER_GRID * (self.config.CLASSES + 1 + 4)
 
         output_flat = GlobalAveragePooling2D()(f12)
         output_expanded = Lambda(lambda x: K.expand_dims(x, axis=-1))(output_flat)
 
         # Final shaping convolution
-        conv31 = Conv1D(filters=627, kernel_size=5, strides=1, padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(output_expanded)
+        conv31 = Conv1D(filters=627, kernel_size=5, strides=1, padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-128))(output_expanded)
         
         # Output Collection
         outputs = []
         # for i in range(627):
         for i in range(24):
             anchor = Lambda(lambda x : x[:,:,i])(conv31)
-            # net_bounds = Dense(32, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(anchor)
-            # net_bounds = Dense(16, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(net_bounds)
-            # net_bounds = Dense(4, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(net_bounds)
-            net_bounds = Dense(4, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(anchor)
-            net_confidence = Dense(1, activation="sigmoid", kernel_initializer=TruncatedNormal(stddev=1e-11))(net_bounds)
+            # net_bounds = Dense(32, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-128))(anchor)
+            # net_bounds = Dense(16, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-128))(net_bounds)
+            # net_bounds = Dense(4, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-128))(net_bounds)
+            net_bounds = Dense(4, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-128))(anchor)
+            net_confidence = Dense(1, activation="sigmoid", kernel_initializer=TruncatedNormal(stddev=1e-128))(concatenate([anchor, output_flat]))
             outputs.append(concatenate([net_bounds, net_confidence]))
 
         # And, of course, the model
@@ -117,9 +118,9 @@ class SqueezeDet(object):
         :param expand_filters_small: the number of filters for the 1x1 expand layer
         :param expand_filter_large: the number of filters for the 3x3
         """
-        squeeze = Conv2D(filters=squeeze_filters, kernel_size=(1, 1), use_bias=True, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(in_layer)
-        smallExpand = Conv2D(filters=expand_filters_small, kernel_size=(1, 1), use_bias=True, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(squeeze)
-        largeExpand = Conv2D(filters=expand_filters_large, kernel_size=(3, 3), use_bias=True, padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-11))(squeeze)
+        squeeze = Conv2D(filters=squeeze_filters, kernel_size=(1, 1), use_bias=True, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-128))(in_layer)
+        smallExpand = Conv2D(filters=expand_filters_small, kernel_size=(1, 1), use_bias=True, activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-128))(squeeze)
+        largeExpand = Conv2D(filters=expand_filters_large, kernel_size=(3, 3), use_bias=True, padding="SAME", activation="relu", kernel_initializer=TruncatedNormal(stddev=1e-128))(squeeze)
         return concatenate([smallExpand, largeExpand], axis=3)
 
     def fit(self, manager, epochs=10):

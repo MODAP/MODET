@@ -21,8 +21,9 @@ from modet.brain import squeezedet
 
 c = bundle.Corpus.open("love_corpora/1-1-1.mocorp")
 cm = bundle.CorpusManager(c, batch_size=2)
+# cm.compile()
 
-net = squeezedet.SqueezeDet(optimizer=Adam(lr=2e-4))
+net = squeezedet.SqueezeDet(optimizer=Adam(lr=2e-2))
 
 net.fit(cm)
 

@@ -251,10 +251,13 @@ class CorpusManager(Sequence):
         anchors = self.__anchors
         self.__compiled_output_data = []
         for frame in utils.progressbar(self.corpus.groundTruths, "Parsing truths: "):
-            anchor_template = [[0, 0, 0, 0, 0]]*len(anchors)
+            anchor_template = []
+            for i in anchors:
+                anchor_template.append([i[0]*1e-4, i[1]*1e-4, (i[0]+50)*1e-4, (i[1]+50)*1e-4, 0])
+            # anchor_template = [[0, 0, 0, 0, 0] for _ in range(len(anchors))]
             anchor_indxs = [anchors.index(self.__assign_anchor(i[0], i[1], i[2], i[3])) for i in frame]
             for box, index in zip(frame, anchor_indxs):
-                anchor_template[index] = box+[1]
+                anchor_template[index] = [box[0]*1e-4, box[1]*1e-4, box[2]*1e-4, box[3]*1e-4]+[1]
             # anchor_template = [i for sublist in anchor_template for i in sublist]
             self.__compiled_output_data.append(anchor_template)
         self.__is_compiled = True
