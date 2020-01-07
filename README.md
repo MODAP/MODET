@@ -1,3 +1,5 @@
+NOTE: there is pretty much nothing in the master branch because.... We have no release code yet. See other branches for better fun!
+
 ![Image](https://raw.githubusercontent.com/MODAP/MODET/master/LOGO.png?raw=true)
 # Motorized Object DETection
 An Open-Source Detection Module
